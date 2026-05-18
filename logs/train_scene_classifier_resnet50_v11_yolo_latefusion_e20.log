@@ -1,0 +1,31 @@
+Using device: mps
+froze backbone for epoch 1
+epoch=1 lr=0.000100 train_loss=1.1132 train_acc=0.7932 val_loss=1.6384 val_acc=0.5757
+saved best checkpoint to checkpoint/scene_classifier_resnet50_v11_yolo_latefusion_e20.pt
+epoch=2 lr=0.000100 train_loss=0.9646 train_acc=0.8333 val_loss=1.6330 val_acc=0.5762
+saved best checkpoint to checkpoint/scene_classifier_resnet50_v11_yolo_latefusion_e20.pt
+unfroze backbone at epoch 3
+epoch=3 lr=0.000100 train_loss=0.8922 train_acc=0.8541 val_loss=1.6233 val_acc=0.5928
+saved best checkpoint to checkpoint/scene_classifier_resnet50_v11_yolo_latefusion_e20.pt
+epoch=4 lr=0.000100 train_loss=0.7971 train_acc=0.8956 val_loss=1.7108 val_acc=0.5785
+epoch=5 lr=0.000100 train_loss=0.7393 train_acc=0.9229 val_loss=1.7522 val_acc=0.5734
+epoch=6 lr=0.000050 train_loss=0.6553 train_acc=0.9635 val_loss=1.7351 val_acc=0.5895
+epoch=7 lr=0.000050 train_loss=0.6169 train_acc=0.9810 val_loss=1.7588 val_acc=0.5928
+epoch=8 lr=0.000025 train_loss=0.5890 train_acc=0.9927 val_loss=1.7261 val_acc=0.5951
+saved best checkpoint to checkpoint/scene_classifier_resnet50_v11_yolo_latefusion_e20.pt
+epoch=9 lr=0.000025 train_loss=0.5772 train_acc=0.9961 val_loss=1.7606 val_acc=0.5926
+epoch=10 lr=0.000013 train_loss=0.5694 train_acc=0.9979 val_loss=1.7528 val_acc=0.5941
+epoch=11 lr=0.000013 train_loss=0.5664 train_acc=0.9984 val_loss=1.7600 val_acc=0.5972
+saved best checkpoint to checkpoint/scene_classifier_resnet50_v11_yolo_latefusion_e20.pt
+epoch=12 lr=0.000006 train_loss=0.5630 train_acc=0.9990 val_loss=1.7479 val_acc=0.5979
+saved best checkpoint to checkpoint/scene_classifier_resnet50_v11_yolo_latefusion_e20.pt
+epoch=13 lr=0.000006 train_loss=0.5613 train_acc=0.9994 val_loss=1.7588 val_acc=0.5949
+epoch=14 lr=0.000003 train_loss=0.5603 train_acc=0.9993 val_loss=1.7599 val_acc=0.5977
+epoch=15 lr=0.000003 train_loss=0.5592 train_acc=0.9996 val_loss=1.7672 val_acc=0.5967
+epoch=16 lr=0.000002 train_loss=0.5588 train_acc=0.9995 val_loss=1.7631 val_acc=0.5957
+epoch=17 lr=0.000002 train_loss=0.5582 train_acc=0.9996 val_loss=1.7602 val_acc=0.5995
+saved best checkpoint to checkpoint/scene_classifier_resnet50_v11_yolo_latefusion_e20.pt
+epoch=18 lr=0.000001 train_loss=0.5582 train_acc=0.9995 val_loss=1.7538 val_acc=0.5975
+epoch=19 lr=0.000001 train_loss=0.5579 train_acc=0.9997 val_loss=1.7567 val_acc=0.5956
+epoch=20 lr=0.000001 train_loss=0.5577 train_acc=0.9997 val_loss=1.7521 val_acc=0.5997
+saved best checkpoint to checkpoint/scene_classifier_resnet50_v11_yolo_latefusion_e20.pt

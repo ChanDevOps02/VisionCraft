@@ -1,0 +1,13 @@
+Using device: mps
+Freezing backbone for the first 1 epoch(s)
+epoch=1 lr=0.000100 train_loss=1.4483 train_acc=0.5945 val_loss=1.7138 val_acc=0.4450
+saved best checkpoint to checkpoint/scene_classifier_resnet18_test_v2.pt
+Unfroze backbone and continuing full fine-tuning
+epoch=2 lr=0.000090 train_loss=0.5929 train_acc=0.7917 val_loss=2.3454 val_acc=0.4715
+saved best checkpoint to checkpoint/scene_classifier_resnet18_test_v2.pt
+epoch=3 lr=0.000065 train_loss=0.4429 train_acc=0.8404 val_loss=2.3704 val_acc=0.4890
+saved best checkpoint to checkpoint/scene_classifier_resnet18_test_v2.pt
+epoch=4 lr=0.000035 train_loss=0.3502 train_acc=0.8718 val_loss=2.3640 val_acc=0.4983
+saved best checkpoint to checkpoint/scene_classifier_resnet18_test_v2.pt
+epoch=5 lr=0.000010 train_loss=0.2942 train_acc=0.8925 val_loss=2.3891 val_acc=0.5041
+saved best checkpoint to checkpoint/scene_classifier_resnet18_test_v2.pt

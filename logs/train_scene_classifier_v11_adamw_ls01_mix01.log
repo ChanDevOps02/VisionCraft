@@ -1,0 +1,9 @@
+Using device: mps
+epoch=1 lr=0.000100 train_loss=1.2142 train_acc=0.7478 val_loss=1.7168 val_acc=0.5479
+saved best checkpoint to checkpoint/scene_classifier_resnet18_v11_adamw_ls01_mix01.pt
+epoch=2 lr=0.000100 train_loss=1.0985 train_acc=0.7943 val_loss=1.7608 val_acc=0.5385
+epoch=3 lr=0.000100 train_loss=1.0484 train_acc=0.8180 val_loss=1.7497 val_acc=0.5538
+saved best checkpoint to checkpoint/scene_classifier_resnet18_v11_adamw_ls01_mix01.pt
+epoch=4 lr=0.000050 train_loss=0.9410 train_acc=0.8648 val_loss=1.7429 val_acc=0.5657
+saved best checkpoint to checkpoint/scene_classifier_resnet18_v11_adamw_ls01_mix01.pt
+epoch=5 lr=0.000050 train_loss=0.8980 train_acc=0.8870 val_loss=1.7636 val_acc=0.5643

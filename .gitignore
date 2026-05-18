@@ -1,0 +1,29 @@
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+
+# Virtual environments / editor settings
+.venv/
+.vscode/
+
+# Runtime / local app artifacts
+input_images/
+
+# Large model weights and checkpoints
+checkpoint/
+*.pt
+*.pth
+
+# Dataset and generated data artifacts
+data/places365/
+data/visioncraft_subset_small*/
+data/object_features_*.npz
+data/object_features_*.json
+
+# Keep the data directory structure itself
+!data/.gitkeep

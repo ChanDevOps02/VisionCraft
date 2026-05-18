@@ -1,0 +1,20 @@
+Using device: mps
+froze backbone for epoch 1
+epoch=1 lr=0.000100 train_loss=1.5099 train_acc=0.6522 val_loss=1.7650 val_acc=0.5011
+saved best checkpoint to checkpoint/scene_classifier_resnet18_v11_adamw_ls01_freeze1_e10.pt
+unfroze backbone at epoch 2
+epoch=2 lr=0.000100 train_loss=1.0444 train_acc=0.8012 val_loss=1.7729 val_acc=0.5469
+saved best checkpoint to checkpoint/scene_classifier_resnet18_v11_adamw_ls01_freeze1_e10.pt
+epoch=3 lr=0.000100 train_loss=0.9164 train_acc=0.8544 val_loss=1.7824 val_acc=0.5485
+saved best checkpoint to checkpoint/scene_classifier_resnet18_v11_adamw_ls01_freeze1_e10.pt
+epoch=4 lr=0.000050 train_loss=0.8013 train_acc=0.9064 val_loss=1.7816 val_acc=0.5659
+saved best checkpoint to checkpoint/scene_classifier_resnet18_v11_adamw_ls01_freeze1_e10.pt
+epoch=5 lr=0.000050 train_loss=0.7459 train_acc=0.9358 val_loss=1.7919 val_acc=0.5651
+epoch=6 lr=0.000025 train_loss=0.6770 train_acc=0.9681 val_loss=1.8124 val_acc=0.5687
+saved best checkpoint to checkpoint/scene_classifier_resnet18_v11_adamw_ls01_freeze1_e10.pt
+epoch=7 lr=0.000025 train_loss=0.6508 train_acc=0.9793 val_loss=1.8014 val_acc=0.5680
+epoch=8 lr=0.000013 train_loss=0.6245 train_acc=0.9897 val_loss=1.7811 val_acc=0.5697
+saved best checkpoint to checkpoint/scene_classifier_resnet18_v11_adamw_ls01_freeze1_e10.pt
+epoch=9 lr=0.000013 train_loss=0.6146 train_acc=0.9926 val_loss=1.8118 val_acc=0.5728
+saved best checkpoint to checkpoint/scene_classifier_resnet18_v11_adamw_ls01_freeze1_e10.pt
+epoch=10 lr=0.000006 train_loss=0.6040 train_acc=0.9960 val_loss=1.8024 val_acc=0.5710

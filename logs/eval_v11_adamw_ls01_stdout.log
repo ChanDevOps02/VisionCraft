@@ -1,0 +1,58 @@
+Confusion Matrix:
+pred->    0    1    2    3    4    5    6    7    8    9   10   11   12   13
+true  0:  345   11    0    6    0    0   27    0    3    1    6    0    0    1
+true  1:   89  198    0   13   30    0   18    0   11    1   35    3    2    0
+true  2:    1    1  322   25    0   50    0   58    1    1    0    6    4   31
+true  3:    7   10    2  175    0    3    7    7    9   21   22   26   10    1
+true  4:   56   22    0   10  149    0   43    0    9    0  109    1    0    1
+true  5:    1    1    7   18    0  356    0   59    0    3    0    2    4   49
+true  6:  117   21    0    6   23    0  453    0   34    1   42    0    3    0
+true  7:    0    0   30   15    0   24    0  338    3    6    0    7   13   64
+true  8:   44   80    2   66   23   10   40    3  161   12  128   16    7    8
+true  9:    1    4   11   58    0    4    1   28    0  262    5   16    3    7
+true 10:   14    6    2   10   75    0   21    0   11    9  245    5    1    1
+true 11:    0    4    0   22    0    0    3    0    4   20   13  128    1    5
+true 12:    0   22    1   34    1    6    6   27    7    4   39   29  109   15
+true 13:    0    0   21   19    1  146    1   15    0    8    2   19    3  265
+
+Class Index Mapping:
+0: bedroom
+1: corridor_lobby
+2: forest_nature
+3: industrial_area
+4: kitchen_dining
+5: mountain_valley
+6: office_study
+7: open_field_landscape
+8: public_large_indoor
+9: residential_outdoor
+10: restaurant_cafe
+11: street_downtown
+12: transportation_hub_road
+13: waterfront
+
+Classification Report:
+                         precision    recall  f1-score   support
+
+                bedroom     0.5111    0.8625    0.6419       400
+         corridor_lobby     0.5211    0.4950    0.5077       400
+          forest_nature     0.8090    0.6440    0.7171       500
+        industrial_area     0.3669    0.5833    0.4505       300
+         kitchen_dining     0.4934    0.3725    0.4245       400
+        mountain_valley     0.5943    0.7120    0.6479       500
+           office_study     0.7306    0.6471    0.6864       700
+   open_field_landscape     0.6318    0.6760    0.6531       500
+    public_large_indoor     0.6364    0.2683    0.3775       600
+    residential_outdoor     0.7507    0.6550    0.6996       400
+        restaurant_cafe     0.3793    0.6125    0.4685       400
+        street_downtown     0.4961    0.6400    0.5590       200
+transportation_hub_road     0.6813    0.3633    0.4739       300
+             waterfront     0.5915    0.5300    0.5591       500
+
+               accuracy                         0.5748      6100
+              macro avg     0.5852    0.5758    0.5619      6100
+           weighted avg     0.6037    0.5748    0.5707      6100
+
+
+Saved report to logs/eval_v11_adamw_ls01_report.txt
+Saved confusion matrix figure to logs/eval_v11_adamw_ls01_confusion.png

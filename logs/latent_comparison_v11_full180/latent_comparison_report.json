@@ -1,0 +1,39 @@
+{
+  "data_root": "data/visioncraft_subset_small_v11",
+  "split": "val",
+  "samples_per_class": 180,
+  "num_samples": 2520,
+  "baseline_checkpoint": "checkpoint/scene_classifier_resnet50_v11_visual_only_e20.pt",
+  "text_checkpoint": "checkpoint/scene_classifier_resnet50_v11_text_crossattn_e20.pt",
+  "pairs": [
+    "kitchen_dining:restaurant_cafe",
+    "waterfront:mountain_valley",
+    "public_large_indoor:corridor_lobby"
+  ],
+  "baseline_metrics": {
+    "mean_same_class_cosine": 0.3625742197036743,
+    "mean_diff_class_cosine": 0.17926424741744995,
+    "same_minus_diff_margin": 0.18330997228622437,
+    "silhouette_score": 0.07862851768732071
+  },
+  "text_metrics": {
+    "mean_same_class_cosine": 0.7205497622489929,
+    "mean_diff_class_cosine": 0.53193598985672,
+    "same_minus_diff_margin": 0.18861377239227295,
+    "silhouette_score": 0.07891567051410675
+  },
+  "text_prototype_metrics": {
+    "mean_correct_class_cosine": 0.03513475880026817,
+    "std_correct_class_cosine": 0.08392633497714996,
+    "mean_correct_vs_rival_margin": -0.1203925833106041,
+    "prototype_retrieval_accuracy": 0.09722222222222222
+  },
+  "outputs": {
+    "umap": "logs/latent_comparison_v11_full180/baseline_vs_text_umap.png",
+    "centroid_heatmaps": "logs/latent_comparison_v11_full180/centroid_cosine_distance_heatmaps.png",
+    "intra_inter_boxplot": "logs/latent_comparison_v11_full180/intra_inter_class_cosine_boxplot.png",
+    "text_prototype_histograms": "logs/latent_comparison_v11_full180/text_prototype_cosine_histograms.png",
+    "pairwise_umap": "logs/latent_comparison_v11_full180/confusion_pair_umap_comparison.png",
+    "attention_examples": "logs/latent_comparison_v11_full180/text_attention_examples.png"
+  }
+}

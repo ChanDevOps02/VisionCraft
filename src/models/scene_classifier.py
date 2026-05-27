@@ -12,7 +12,7 @@ from src.models.object_features import build_object_feature_vector
 from src.models.train_scene_classifier import build_model, build_transforms, get_device
 
 
-DEFAULT_SCENE_CHECKPOINT = Path("checkpoint/scene_classifier_resnet50_v11_yolo_latefusion_e20.pt")
+DEFAULT_SCENE_CHECKPOINT = Path("checkpoint/scene_classifier_resnet50_v11_text_crossattn_e20.pt")
 
 _SCENE_MODEL = None
 _SCENE_METADATA: dict[str, Any] | None = None
@@ -66,12 +66,20 @@ def _load_scene_model():
     backbone = checkpoint.get("backbone", "resnet18")
     fusion_mode = checkpoint.get("fusion_mode", "visual-only")
     object_feature_dim = checkpoint.get("object_feature_dim", 0)
+    object_max_objects = checkpoint.get("object_max_objects", 16)
+    segmentation_feature_dim = checkpoint.get("segmentation_feature_dim", 0)
+    scene_text_embeddings = checkpoint.get("scene_text_embeddings", None)
+    cross_attention_dropout = checkpoint.get("cross_attention_dropout", 0.1)
 
     model = build_model(
         num_classes=len(checkpoint["classes"]),
         backbone=backbone,
         fusion_mode=fusion_mode,
         object_feature_dim=object_feature_dim,
+        object_max_objects=object_max_objects,
+        segmentation_feature_dim=segmentation_feature_dim,
+        scene_text_embeddings=scene_text_embeddings,
+        cross_attention_dropout=cross_attention_dropout,
     )
     model.load_state_dict(checkpoint["model_state_dict"])
     device = get_device()

@@ -17,9 +17,13 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from src.models.train_scene_classifier import (
     ImageFolderWithObjectFeatures,
+    ImageFolderWithObjectTokens,
+    ImageFolderWithSegmentationFeatures,
     build_model,
     build_transforms,
+    forward_model,
     get_device,
+    unpack_batch,
 )
 
 
@@ -31,6 +35,9 @@ def parse_args():
     parser.add_argument("--num-workers", type=int, default=2)
     parser.add_argument("--split", choices=["val", "train"], default="val")
     parser.add_argument("--object-features-path", type=str, default="")
+    parser.add_argument("--object-tokens-path", type=str, default="")
+    parser.add_argument("--segmentation-features-path", type=str, default="")
+    parser.add_argument("--scene-text-embeddings-path", type=str, default="")
     parser.add_argument("--report-path", type=str, default="", help="Optional path to save the text report.")
     parser.add_argument("--figure-path", type=str, default="", help="Optional path to save confusion matrix heatmap PNG.")
     return parser.parse_args()
@@ -48,6 +55,10 @@ def evaluate(args):
     backbone = checkpoint.get("backbone", "resnet18")
     fusion_mode = checkpoint.get("fusion_mode", "visual-only")
     object_feature_dim = checkpoint.get("object_feature_dim", 0)
+    object_max_objects = checkpoint.get("object_max_objects", 16)
+    segmentation_feature_dim = checkpoint.get("segmentation_feature_dim", 0)
+    scene_text_embeddings = checkpoint.get("scene_text_embeddings", None)
+    cross_attention_dropout = checkpoint.get("cross_attention_dropout", 0.1)
 
     _, eval_transform = build_transforms(image_size)
     dataset = datasets.ImageFolder(Path(args.data_root) / args.split, transform=eval_transform)
@@ -59,6 +70,28 @@ def evaluate(args):
             Path(args.data_root),
             Path(args.object_features_path),
         )
+    elif fusion_mode == "cross-attention":
+        if not args.object_tokens_path:
+            raise ValueError("cross-attention evaluation requires --object-tokens-path")
+        dataset = ImageFolderWithObjectTokens(
+            dataset,
+            Path(args.data_root),
+            Path(args.object_tokens_path),
+        )
+    elif fusion_mode == "segmentation-cross-attention":
+        if not args.segmentation_features_path:
+            raise ValueError("segmentation-cross-attention evaluation requires --segmentation-features-path")
+        dataset = ImageFolderWithSegmentationFeatures(
+            dataset,
+            Path(args.data_root),
+            Path(args.segmentation_features_path),
+        )
+    elif fusion_mode == "text-cross-attention":
+        if scene_text_embeddings is None:
+            if not args.scene_text_embeddings_path:
+                raise ValueError("text-cross-attention evaluation requires checkpoint embeddings or --scene-text-embeddings-path")
+            text_data = np.load(args.scene_text_embeddings_path, allow_pickle=True)
+            scene_text_embeddings = torch.from_numpy(text_data["embeddings"].astype(np.float32))
     loader = DataLoader(
         dataset,
         batch_size=args.batch_size,
@@ -72,6 +105,10 @@ def evaluate(args):
         backbone=backbone,
         fusion_mode=fusion_mode,
         object_feature_dim=object_feature_dim,
+        object_max_objects=object_max_objects,
+        segmentation_feature_dim=segmentation_feature_dim,
+        scene_text_embeddings=scene_text_embeddings,
+        cross_attention_dropout=cross_attention_dropout,
     )
     model.load_state_dict(checkpoint["model_state_dict"])
     model.to(device)
@@ -82,20 +119,19 @@ def evaluate(args):
 
     with torch.no_grad():
         for batch in loader:
-            if len(batch) == 3:
-                images, labels, object_features = batch
-                object_features = object_features.to(device)
-            else:
-                images, labels = batch
-                object_features = None
-            images = images.to(device)
-            if object_features is not None:
-                logits = model(images, object_features)
-            else:
-                logits = model(images)
+            batch_data = unpack_batch(batch, device)
+            logits = forward_model(
+                model,
+                batch_data["images"],
+                batch_data["object_features"],
+                batch_data["segmentation_features"],
+                batch_data["object_class_ids"],
+                batch_data["object_geometry"],
+                batch_data["object_valid_mask"],
+            )
             preds = logits.argmax(dim=1).cpu().numpy()
             y_pred.extend(preds.tolist())
-            y_true.extend(labels.numpy().tolist())
+            y_true.extend(batch_data["labels"].cpu().numpy().tolist())
 
     cm = confusion_matrix(y_true, y_pred)
     report = classification_report(

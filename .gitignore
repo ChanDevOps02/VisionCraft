@@ -10,6 +10,7 @@ __pycache__/
 # Virtual environments / editor settings
 .venv/
 .vscode/
+.cache/
 
 # Runtime / local app artifacts
 input_images/
@@ -24,6 +25,19 @@ data/places365/
 data/visioncraft_subset_small*/
 data/object_features_*.npz
 data/object_features_*.json
+data/object_tokens_*.npz
+data/object_tokens_*.json
+data/scene_text_embeddings_*.npz
+data/scene_text_embeddings_*.json
+data/segmentation_features_*.npz
+data/segmentation_features_*.json
+data/places365_download.log
+
+# Generated experiment logs and caches
+logs/*.log
+logs/*_report.txt
+logs/*stdout*.log
+logs/latent_comparison_*/latent_cache.npz
 
 # Keep the data directory structure itself
 !data/.gitkeep

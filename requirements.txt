@@ -1,9 +1,24 @@
+# Core application
 gradio>=5.0.0
-matplotlib>=3.8.0
 numpy>=1.26.0
 opencv-python>=4.9.0
 pillow>=10.0.0
-scikit-learn>=1.5.0
+matplotlib>=3.8.0
+
+# Deep learning / vision models
 torch>=2.2.0
 torchvision>=0.17.0
 ultralytics>=8.3.0
+transformers>=4.41.0
+
+# Research / evaluation / visualization
+scikit-learn>=1.5.0
+scipy>=1.13.0
+umap-learn>=0.5.6
+
+# OCR backends
+# Note: pytesseract requires the Tesseract OCR system binary to be installed separately.
+paddleocr>=2.8.1
+paddlepaddle>=2.6.1
+easyocr>=1.7.1
+pytesseract>=0.3.10

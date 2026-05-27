@@ -1,0 +1,41 @@
+{
+  "data_root": "data/visioncraft_subset_small_v11",
+  "split": "val",
+  "samples_per_class": 180,
+  "num_samples": 2520,
+  "baseline_checkpoint": "/Users/minchankang/Desktop/학업과제및자료/26학년도 1학기/컴퓨터 비전/Final_Project/checkpoint/scene_classifier_resnet50_v11_visual_only_e20.pt",
+  "text_checkpoint": "/Users/minchankang/Desktop/학업과제및자료/26학년도 1학기/컴퓨터 비전/Final_Project/checkpoint/scene_classifier_resnet50_v11_text_crossattn_infonce_e20_rerun.pt",
+  "cache_file": "/Users/minchankang/Desktop/학업과제및자료/26학년도 1학기/컴퓨터 비전/Final_Project/logs/latent_comparison_v11_infonce_rerun_full180/latent_cache.npz",
+  "pairs": [
+    "kitchen_dining:restaurant_cafe",
+    "waterfront:mountain_valley",
+    "public_large_indoor:corridor_lobby"
+  ],
+  "baseline_metrics": {
+    "mean_same_class_cosine": 0.3625742495059967,
+    "mean_diff_class_cosine": 0.17926427721977234,
+    "same_minus_diff_margin": 0.18330997228622437,
+    "silhouette_score": 0.0786285251379013
+  },
+  "text_metrics": {
+    "mean_same_class_cosine": 0.6789928674697876,
+    "mean_diff_class_cosine": 0.45086726546287537,
+    "same_minus_diff_margin": 0.22812560200691223,
+    "silhouette_score": 0.08344538509845734
+  },
+  "text_prototype_metrics": {
+    "mean_correct_class_cosine": 0.21840272843837738,
+    "std_correct_class_cosine": 0.15922978520393372,
+    "mean_correct_vs_rival_margin": 0.055193837732076645,
+    "prototype_retrieval_accuracy": 0.5920634920634921
+  },
+  "outputs": {
+    "umap": "/Users/minchankang/Desktop/학업과제및자료/26학년도 1학기/컴퓨터 비전/Final_Project/logs/latent_comparison_v11_infonce_rerun_full180/baseline_vs_text_umap.png",
+    "tsne": "/Users/minchankang/Desktop/학업과제및자료/26학년도 1학기/컴퓨터 비전/Final_Project/logs/latent_comparison_v11_infonce_rerun_full180/baseline_vs_text_tsne.png",
+    "centroid_heatmaps": "/Users/minchankang/Desktop/학업과제및자료/26학년도 1학기/컴퓨터 비전/Final_Project/logs/latent_comparison_v11_infonce_rerun_full180/centroid_cosine_distance_heatmaps.png",
+    "intra_inter_boxplot": "/Users/minchankang/Desktop/학업과제및자료/26학년도 1학기/컴퓨터 비전/Final_Project/logs/latent_comparison_v11_infonce_rerun_full180/intra_inter_class_cosine_boxplot.png",
+    "text_prototype_histograms": "/Users/minchankang/Desktop/학업과제및자료/26학년도 1학기/컴퓨터 비전/Final_Project/logs/latent_comparison_v11_infonce_rerun_full180/text_prototype_cosine_histograms.png",
+    "pairwise_umap": "/Users/minchankang/Desktop/학업과제및자료/26학년도 1학기/컴퓨터 비전/Final_Project/logs/latent_comparison_v11_infonce_rerun_full180/confusion_pair_umap_comparison.png",
+    "attention_examples": "/Users/minchankang/Desktop/학업과제및자료/26학년도 1학기/컴퓨터 비전/Final_Project/logs/latent_comparison_v11_infonce_rerun_full180/text_attention_examples.png"
+  }
+}

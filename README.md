@@ -354,13 +354,13 @@ VisionCraft는 입력 이미지의 전체 구도가 기울어져 있는 경우, 
 현재 구현은 grayscale 변환 후 Canny edge detection과 probabilistic Hough transform을 이용해 주요 직선을 검출하고, 이들 중 수평 또는 수직 기준으로 해석 가능한 선분만 선택하여 지배적인 기울기 각도를 추정한다.
 
 ```math
-\theta_i = \operatorname{atan2}(y_2 - y_1,\ x_2 - x_1)
+\theta_i = \mathrm{atan2}(y_2 - y_1,\ x_2 - x_1)
 ```
 
 선분 길이를 가중치로 사용하여 대표 기울기를 추정하며, 전체 보정 각도는 weighted median으로 결정한다.
 
 ```math
-\theta^{*} = \operatorname{WeightedMedian}(\{\theta_i\}, \{w_i\})
+\theta^{*} = \mathrm{WeightedMedian}(\{\theta_i\}, \{w_i\})
 ```
 
 이후 이미지 전체를 회전시켜 straighten preview를 생성한다.

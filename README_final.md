@@ -370,7 +370,7 @@ $$
 \mathrm{BrightnessScore} = \frac{\mu_I}{255} \times 100
 $$
 
-이 점수는 [brightness.py](/Users/minchankang/Desktop/학업과제및자료/26학년도%201학기/컴퓨터%20비전/Final_Project/src/analyzer/brightness.py) 에서 직접 계산되며, 후속 단계에서는 전역 밝기 보정과 gamma correction의 적용 여부를 판단하는 기준으로 활용된다. 예를 들어 brightness score가 낮으면 전역 $\beta$ offset을 증가시키고, 극단적으로 낮은 경우에는 추가적인 gamma correction을 수행한다.
+이 점수는 [brightness.py](src/analyzer/brightness.py) 에서 직접 계산되며, 후속 단계에서는 전역 밝기 보정과 gamma correction의 적용 여부를 판단하는 기준으로 활용된다. 예를 들어 brightness score가 낮으면 전역 $\beta$ offset을 증가시키고, 극단적으로 낮은 경우에는 추가적인 gamma correction을 수행한다.
 
 Brightness score는 단일 평균값이기 때문에 spatially localized underexposure를 완전히 설명하지는 못한다. 그러나 VisionCraft에서는 이 지표를 blur, contrast, exposure state와 함께 사용하므로 단독 지표의 한계를 일정 부분 보완할 수 있다.
 
@@ -392,7 +392,7 @@ $$
 \mathrm{ContrastScore} = \min\left(\frac{\sigma_I}{64}\times 100,\;100\right)
 $$
 
-이 수식은 [contrast.py](/Users/minchankang/Desktop/학업과제및자료/26학년도%201학기/컴퓨터%20비전/Final_Project/src/analyzer/contrast.py) 에 구현되어 있다. contrast score가 낮을수록 전역 brightness/contrast scaling에서 scale factor $\alpha$가 증가하며, 이후 CLAHE 단계에서도 국소 대비 회복이 수행된다.
+이 수식은 [contrast.py](src/analyzer/contrast.py) 에 구현되어 있다. contrast score가 낮을수록 전역 brightness/contrast scaling에서 scale factor $\alpha$가 증가하며, 이후 CLAHE 단계에서도 국소 대비 회복이 수행된다.
 
 이 방식은 histogram spread를 직관적으로 반영한다는 장점이 있지만, 장면 내부의 국소 contrast variation까지는 충분히 설명하지 못한다. 따라서 VisionCraft는 전역 contrast score를 먼저 계산한 뒤, 별도의 CLAHE를 통해 local contrast 보정을 추가적으로 수행한다.
 
@@ -414,7 +414,7 @@ $$
 \mathrm{BlurScore} = \min\left(\frac{\mathrm{Var}_{\Delta}}{500}\times 100,\;100\right)
 $$
 
-해당 수식은 [blur.py](/Users/minchankang/Desktop/학업과제및자료/26학년도%201학기/컴퓨터%20비전/Final_Project/src/analyzer/blur.py) 에 구현되어 있다. 여기서 score가 높다는 것은 edge energy가 충분하다는 뜻이며, score가 낮다는 것은 image가 흐리거나 defocus/low-pass degradation의 영향을 받았을 가능성을 의미한다.
+해당 수식은 [blur.py](src/analyzer/blur.py) 에 구현되어 있다. 여기서 score가 높다는 것은 edge energy가 충분하다는 뜻이며, score가 낮다는 것은 image가 흐리거나 defocus/low-pass degradation의 영향을 받았을 가능성을 의미한다.
 
 이 blur score는 이후 adaptive sharpening 강도 조절의 핵심 입력으로 사용된다. 예를 들어 blur score가 30 미만이면 비교적 강한 sharpening이 적용되고, 60 이상이면 sharpening을 생략한다. 또한 인물 장면이나 indoor scene에서는 sharpening 강도를 별도로 낮춰 과도한 edge enhancement를 억제한다.
 
@@ -442,7 +442,7 @@ $$
 \mathrm{EdgeDensityScore} = \mathrm{EdgeDensity}\times 100
 $$
 
-이다. 해당 로직은 [edge_density.py](/Users/minchankang/Desktop/학업과제및자료/26학년도%201학기/컴퓨터%20비전/Final_Project/src/analyzer/edge_density.py) 에 구현되어 있다.
+이다. 해당 로직은 [edge_density.py](src/analyzer/edge_density.py) 에 구현되어 있다.
 
 Edge density는 blur와 유사해 보일 수 있지만 역할이 다르다. blur score는 edge sharpness를 측정하고, edge density는 장면의 구조적 복잡도와 고빈도 경계의 양을 측정한다. VisionCraft에서는 edge density가 매우 낮을 경우 bilateral filtering을 선택하여 구조를 보존하면서 노이즈를 줄이고, 저조도이면서 blur가 큰 경우에는 median filtering을 적용하는 등 denoising policy를 선택하는 데 사용한다.
 
@@ -464,7 +464,7 @@ $$
 s_c = \frac{\mu_{\mathrm{all}}}{\mu_c}, \quad c \in \{R,G,B\}
 $$
 
-로 정의된다. 이는 [color_balance.py](/Users/minchankang/Desktop/학업과제및자료/26학년도%201학기/컴퓨터%20비전/Final_Project/src/analyzer/color_balance.py) 에서 그대로 구현되어 있으며, 이후 traditional enhancement의 white balance 단계에서도 동일한 철학이 사용된다.
+로 정의된다. 이는 [color_balance.py](src/analyzer/color_balance.py) 에서 그대로 구현되어 있으며, 이후 traditional enhancement의 white balance 단계에서도 동일한 철학이 사용된다.
 
 또한 color cast의 강도는 다음과 같이 추정한다.
 
@@ -486,7 +486,7 @@ $$
 
 #### 4.1.6 Exposure and Dynamic Range Analysis
 
-Exposure Analysis는 단순 평균 밝기보다 더 풍부한 photometric 상태를 추정하기 위해 shadow ratio, highlight ratio, 그리고 percentile-based dynamic range를 함께 사용한다. 구현은 [exposure.py](/Users/minchankang/Desktop/학업과제및자료/26학년도%201학기/컴퓨터%20비전/Final_Project/src/analyzer/exposure.py) 에 있다.
+Exposure Analysis는 단순 평균 밝기보다 더 풍부한 photometric 상태를 추정하기 위해 shadow ratio, highlight ratio, 그리고 percentile-based dynamic range를 함께 사용한다. 구현은 [exposure.py](src/analyzer/exposure.py) 에 있다.
 
 먼저 shadow ratio와 highlight ratio는 다음과 같이 정의된다.
 
@@ -527,7 +527,7 @@ $$
 
 #### 4.2.1 Scene Classification
 
-Scene Classification은 입력 이미지의 high-level semantic identity를 추정하는 단계이다. 현재 앱에서는 [scene_classifier.py](/Users/minchankang/Desktop/학업과제및자료/26학년도%201학기/컴퓨터%20비전/Final_Project/src/models/scene_classifier.py) 가 기본 추론 진입점이며, 기본 체크포인트는 `scene_classifier_resnet50_v11_text_crossattn_e20.pt` 이다.
+Scene Classification은 입력 이미지의 high-level semantic identity를 추정하는 단계이다. 현재 앱에서는 [scene_classifier.py](src/models/scene_classifier.py) 가 기본 추론 진입점이며, 기본 체크포인트는 `scene_classifier_resnet50_v11_text_crossattn_e20.pt` 이다.
 
 추론 시 이미지는 학습 시 사용한 transform을 거쳐 backbone으로 입력되며, 최종 logits $\mathbf{z}$에 대해 softmax를 적용하여 클래스 확률을 계산한다.
 
@@ -558,7 +558,7 @@ $$
 
 #### 4.2.2 Object Detection
 
-Object Detection은 [object_detector.py](/Users/minchankang/Desktop/학업과제및자료/26학년도%201학기/컴퓨터%20비전/Final_Project/src/models/object_detector.py) 에 구현되어 있으며, `ultralytics`의 `YOLOv8n`을 사용한다. 추론 시 confidence threshold는 0.35로 설정되어 있다.
+Object Detection은 [object_detector.py](src/models/object_detector.py) 에 구현되어 있으며, `ultralytics`의 `YOLOv8n`을 사용한다. 추론 시 confidence threshold는 0.35로 설정되어 있다.
 
 각 detection은 bounding box
 
@@ -609,7 +609,7 @@ $$
 
 #### 4.2.3 Semantic Segmentation
 
-Semantic Segmentation은 [segmenter.py](/Users/minchankang/Desktop/학업과제및자료/26학년도%201학기/컴퓨터%20비전/Final_Project/src/models/segmenter.py) 에 구현되어 있으며, `nvidia/segformer-b0-finetuned-ade-512-512` 모델을 사용한다. 모델 출력은 각 픽셀의 semantic class ID map이며, VisionCraft는 이를 원본 해상도에 맞게 post-process한다.
+Semantic Segmentation은 [segmenter.py](src/models/segmenter.py) 에 구현되어 있으며, `nvidia/segformer-b0-finetuned-ade-512-512` 모델을 사용한다. 모델 출력은 각 픽셀의 semantic class ID map이며, VisionCraft는 이를 원본 해상도에 맞게 post-process한다.
 
 픽셀 단위 semantic prediction map을 $S(x,y)$라고 하면, 클래스 $k$에 대한 mask는
 
@@ -654,7 +654,7 @@ $$
 
 #### 4.3.1 Auto Straighten
 
-Auto Straighten은 현재 [tilt_correction.py](/Users/minchankang/Desktop/학업과제및자료/26학년도%201학기/컴퓨터%20비전/Final_Project/src/analyzer/tilt_correction.py) 에 구현되어 있으며, 풍경/실내/건축 장면에서 수평선 또는 수직선 기반의 전역 기울기를 자동으로 추정한다.
+Auto Straighten은 현재 [tilt_correction.py](src/analyzer/tilt_correction.py) 에 구현되어 있으며, 풍경/실내/건축 장면에서 수평선 또는 수직선 기반의 전역 기울기를 자동으로 추정한다.
 
 먼저 grayscale image에 Canny edge detector를 적용한 뒤, probabilistic Hough transform으로 선분 집합을 추출한다. 각 선분 $i$의 양 끝점을 $(x_1,y_1), (x_2,y_2)$라고 할 때, 수평 기준 angle은
 
@@ -684,7 +684,7 @@ $$
 
 #### 4.3.2 Crop Suggestion
 
-Crop Suggestion은 [crop_suggestion.py](/Users/minchankang/Desktop/학업과제및자료/26학년도%201학기/컴퓨터%20비전/Final_Project/src/analyzer/crop_suggestion.py) 에 구현되어 있다. 이 모듈은 scene label에 직접 의존하지 않고, 우선적으로 object detection 결과를 사용하며, detection이 없을 경우 segmentation 결과로 fallback한다.
+Crop Suggestion은 [crop_suggestion.py](src/analyzer/crop_suggestion.py) 에 구현되어 있다. 이 모듈은 scene label에 직접 의존하지 않고, 우선적으로 object detection 결과를 사용하며, detection이 없을 경우 segmentation 결과로 fallback한다.
 
 Detection 기반 crop의 경우, main object는 가장 큰 area ratio를 가진 detection으로 선택된다. 그 객체 중심 $(c_x,c_y)$와 가장 가까운 rule-of-thirds point $(t_x,t_y)$를 찾은 뒤, crop box의 중심을 해당 thirds point에 맞추도록 이동시킨다.
 
@@ -705,7 +705,7 @@ Segmentation fallback의 경우에는 `sky`, `water`, `mountain`, `tree`, `road`
 
 #### 4.3.3 OCR and Perspective Rectification
 
-OCR and Perspective Rectification은 [document_text.py](/Users/minchankang/Desktop/학업과제및자료/26학년도%201학기/컴퓨터%20비전/Final_Project/src/analyzer/document_text.py) 에 구현되어 있으며, 문서형 이미지에서 정면 보정과 텍스트 추출을 수행한다.
+OCR and Perspective Rectification은 [document_text.py](src/analyzer/document_text.py) 에 구현되어 있으며, 문서형 이미지에서 정면 보정과 텍스트 추출을 수행한다.
 
 Perspective rectification은 먼저 문서 영역에 해당하는 사각형 contour를 자동 검출하거나, 사용자가 직접 4개의 꼭짓점을 지정하여 수행된다. 네 점이 주어졌을 때 homography 기반 사영 변환은
 
@@ -730,7 +730,7 @@ OCR 자체는 하나의 엔진에 고정되지 않는다. 우선순위는 다음
 
 #### 4.3.4 Traditional Enhancement
 
-Traditional Enhancement는 [traditional_enhance.py](/Users/minchankang/Desktop/학업과제및자료/26학년도%201학기/컴퓨터%20비전/Final_Project/src/enhancer/traditional_enhance.py) 에 구현되어 있다. 이 모듈은 diffusion이나 GAN 기반 보정이 아니라, 품질 분석 결과를 입력으로 받아 classical image processing operator의 적용 강도와 순서를 조절하는 heuristic enhancement pipeline이다.
+Traditional Enhancement는 [traditional_enhance.py](src/enhancer/traditional_enhance.py) 에 구현되어 있다. 이 모듈은 diffusion이나 GAN 기반 보정이 아니라, 품질 분석 결과를 입력으로 받아 classical image processing operator의 적용 강도와 순서를 조절하는 heuristic enhancement pipeline이다.
 
 전체 순서는 대략 다음과 같다.
 
@@ -928,7 +928,7 @@ Places365가 본 연구에 적합한 이유는 다음과 같다.
 - open_field_landscape
 - urban_or_misc outdoor 계열 장면
 
-원본 Places365 label은 [visioncraft_scene_mapping.py](/Users/minchankang/Desktop/학업과제및자료/26학년도%201학기/컴퓨터%20비전/Final_Project/src/models/visioncraft_scene_mapping.py) 의 매핑 규칙을 통해 상위 VisionCraft class로 재구성된다. 이 설계의 핵심 목적은 두 가지이다.
+원본 Places365 label은 [visioncraft_scene_mapping.py](src/models/visioncraft_scene_mapping.py) 의 매핑 규칙을 통해 상위 VisionCraft class로 재구성된다. 이 설계의 핵심 목적은 두 가지이다.
 
 1. 애플리케이션 관점에서 실제 scene-aware enhancement에 의미 있는 coarse semantic category를 구성하는 것
 2. 연구 관점에서 visually similar class pair를 일부러 남겨 두어 representation learning의 한계를 드러내는 것
@@ -1077,7 +1077,7 @@ $$
 
 #### 6.8.1 Class Text Prompt
 
-Text-guided model의 출발점은 각 scene class를 설명하는 class-level text prompt이다. 이 prompt들은 [scene_text_prompts.py](/Users/minchankang/Desktop/학업과제및자료/26학년도%201학기/컴퓨터%20비전/Final_Project/src/models/scene_text_prompts.py) 에 정의되어 있으며, 단순한 class name만이 아니라 해당 장면을 설명하는 짧은 자연어 문장으로 구성된다.
+Text-guided model의 출발점은 각 scene class를 설명하는 class-level text prompt이다. 이 prompt들은 [scene_text_prompts.py](src/models/scene_text_prompts.py) 에 정의되어 있으며, 단순한 class name만이 아니라 해당 장면을 설명하는 짧은 자연어 문장으로 구성된다.
 
 각 prompt는 CLIP text encoder를 통해 embedding vector $\mathbf{t}_k$로 변환된다.
 
@@ -1093,7 +1093,7 @@ $$
 
 #### 6.8.2 Visual-Text Fusion
 
-현재 구현의 text-guided fusion은 [text_cross_attention.py](/Users/minchankang/Desktop/학업과제및자료/26학년도%201학기/컴퓨터%20비전/Final_Project/src/models/text_cross_attention.py) 에 정의된 단방향 cross-attention 구조이다. ResNet50 backbone이 만든 feature map을 flatten하여 visual token sequence를 구성하면,
+현재 구현의 text-guided fusion은 [text_cross_attention.py](src/models/text_cross_attention.py) 에 정의된 단방향 cross-attention 구조이다. ResNet50 backbone이 만든 feature map을 flatten하여 visual token sequence를 구성하면,
 
 $$
 \mathbf{V} \in \mathbb{R}^{N \times d_v}

@@ -583,12 +583,13 @@ $$
 이다. 또한 rule-of-thirds 기준점 집합
 
 $$
-\mathcal{T} = \left\{
-\left(\frac{W}{3},\frac{H}{3}\right),
-\left(\frac{2W}{3},\frac{H}{3}\right),
-\left(\frac{W}{3},\frac{2H}{3}\right),
-\left(\frac{2W}{3},\frac{2H}{3}\right)
-\right\}
+\mathcal{T} =
+\{
+(\tfrac{W}{3}, \tfrac{H}{3}),
+(\tfrac{2W}{3}, \tfrac{H}{3}),
+(\tfrac{W}{3}, \tfrac{2H}{3}),
+(\tfrac{2W}{3}, \tfrac{2H}{3})
+\}
 $$
 
 에 대해 가장 가까운 기준점과의 정규화 거리를

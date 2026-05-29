@@ -1616,7 +1616,7 @@ pip install -r requirements.txt
    ```
 
    이 파일이 없으면 앱은 `_heuristic_scene` fallback으로 동작하며, 학습된 ResNet50 + text cross-attention + InfoNCE 추론 대신 coarse heuristic scene label만 반환한다.  
-   따라서 제출용 zip이나 별도 백업본에서 `checkpoint/` 폴더를 함께 준비하는 것이 가장 안전하다.
+
 
 5. Training / evaluation dataset  
    연구 파이프라인의 학습과 평가는 기본적으로 아래 데이터셋 경로를 사용한다.

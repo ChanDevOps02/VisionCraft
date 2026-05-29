@@ -18,16 +18,16 @@
     "silhouette_score": 0.0786285251379013
   },
   "text_metrics": {
-    "mean_same_class_cosine": 0.6789928674697876,
-    "mean_diff_class_cosine": 0.45086726546287537,
-    "same_minus_diff_margin": 0.22812560200691223,
-    "silhouette_score": 0.08344538509845734
+    "mean_same_class_cosine": 0.5508003830909729,
+    "mean_diff_class_cosine": 0.18452627956867218,
+    "same_minus_diff_margin": 0.3662741184234619,
+    "silhouette_score": 0.11291122436523438
   },
   "text_prototype_metrics": {
-    "mean_correct_class_cosine": 0.21840272843837738,
-    "std_correct_class_cosine": 0.15922978520393372,
-    "mean_correct_vs_rival_margin": 0.055193837732076645,
-    "prototype_retrieval_accuracy": 0.5920634920634921
+    "mean_correct_class_cosine": 0.45754238963127136,
+    "std_correct_class_cosine": 0.3131376802921295,
+    "mean_correct_vs_rival_margin": 0.1465352326631546,
+    "prototype_retrieval_accuracy": 0.6015873015873016
   },
   "outputs": {
     "umap": "/Users/minchankang/Desktop/학업과제및자료/26학년도 1학기/컴퓨터 비전/Final_Project/logs/latent_comparison_v11_infonce_rerun_full180/baseline_vs_text_umap.png",

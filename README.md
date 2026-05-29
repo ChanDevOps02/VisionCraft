@@ -964,12 +964,7 @@ $$
 또한 loss $\mathcal{L}$에 대해 입력 $\mathbf{x}$로의 gradient를 쓰면
 
 $$
-\frac{\partial \mathcal{L}}{\partial \mathbf{x}}
-=
-\frac{\partial \mathcal{L}}{\partial \mathbf{y}}
-\left(
-\frac{\partial \mathcal{F}(\mathbf{x}, W)}{\partial \mathbf{x}} + I
-\right)
+\frac{\partial \mathcal{L}}{\partial \mathbf{x}} = \frac{\partial \mathcal{L}}{\partial \mathbf{y}} \left( \frac{\partial \mathcal{F}(\mathbf{x}, W)}{\partial \mathbf{x}} + I \right)
 $$
 
 형태가 되므로, shortcut path의 identity term이 gradient flow를 안정화하고 degradation problem과 vanishing gradient를 완화하는 데 도움을 준다.

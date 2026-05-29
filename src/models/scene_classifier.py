@@ -13,10 +13,13 @@ from src.models.train_scene_classifier import build_model, build_transforms, get
 
 
 DEFAULT_SCENE_CHECKPOINT = Path("checkpoint/scene_classifier_resnet50_v11_text_crossattn_infonce_A.pt")
+BASELINE_SCENE_CHECKPOINT = Path("checkpoint/scene_classifier_resnet50_v11_visual_only_e20.pt")
+VANILLA_TEXT_SCENE_CHECKPOINT = Path("checkpoint/scene_classifier_resnet50_v11_text_crossattn_e20.pt")
+INFONCE_SCENE_CHECKPOINT = Path("checkpoint/scene_classifier_resnet50_v11_text_crossattn_infonce_A.pt")
 
-_SCENE_MODEL = None
-_SCENE_METADATA: dict[str, Any] | None = None
-_SCENE_DEVICE = None
+_SCENE_MODELS: dict[str, Any] = {}
+_SCENE_METADATA_BY_PATH: dict[str, dict[str, Any]] = {}
+_SCENE_DEVICES: dict[str, torch.device] = {}
 
 
 def _heuristic_scene(image: np.ndarray) -> dict[str, str]:
@@ -52,13 +55,11 @@ def _heuristic_scene(image: np.ndarray) -> dict[str, str]:
     }
 
 
-def _load_scene_model():
-    global _SCENE_MODEL, _SCENE_METADATA, _SCENE_DEVICE
+def _load_scene_model(checkpoint_path: Path = DEFAULT_SCENE_CHECKPOINT):
+    cache_key = str(checkpoint_path)
+    if cache_key in _SCENE_MODELS:
+        return _SCENE_MODELS[cache_key], _SCENE_METADATA_BY_PATH[cache_key], _SCENE_DEVICES[cache_key]
 
-    if _SCENE_MODEL is not None:
-        return _SCENE_MODEL, _SCENE_METADATA, _SCENE_DEVICE
-
-    checkpoint_path = DEFAULT_SCENE_CHECKPOINT
     if not checkpoint_path.exists():
         return None, None, None
 
@@ -86,20 +87,19 @@ def _load_scene_model():
     model.to(device)
     model.eval()
 
-    _SCENE_MODEL = model
-    _SCENE_METADATA = checkpoint
-    _SCENE_DEVICE = device
-    return _SCENE_MODEL, _SCENE_METADATA, _SCENE_DEVICE
+    _SCENE_MODELS[cache_key] = model
+    _SCENE_METADATA_BY_PATH[cache_key] = checkpoint
+    _SCENE_DEVICES[cache_key] = device
+    return _SCENE_MODELS[cache_key], _SCENE_METADATA_BY_PATH[cache_key], _SCENE_DEVICES[cache_key]
 
 
-def classify_scene(
+def _predict_scene_with_loaded_model(
+    model,
+    metadata: dict[str, Any],
+    device: torch.device,
     image: np.ndarray,
     detection_result: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    model, metadata, device = _load_scene_model()
-    if model is None or metadata is None or device is None:
-        return _heuristic_scene(image)
-
     image_size = metadata["image_size"]
     classes = metadata["classes"]
     fusion_mode = metadata.get("fusion_mode", "visual-only")
@@ -124,7 +124,6 @@ def classify_scene(
     pred_idx = int(np.argmax(probabilities))
     pred_label = classes[pred_idx]
     pred_confidence = float(probabilities[pred_idx])
-
     topk_indices = np.argsort(probabilities)[::-1][:3]
     topk_parts = [f"{classes[idx]}={probabilities[idx]:.3f}" for idx in topk_indices]
     reason = (
@@ -142,4 +141,56 @@ def classify_scene(
             for idx in topk_indices
         ],
         "source": "learned-checkpoint",
+        "checkpoint": str(metadata.get("checkpoint_path", "")),
+        "backbone": metadata.get("backbone", "resnet18"),
+        "fusion_mode": metadata.get("fusion_mode", "visual-only"),
     }
+
+
+def classify_scene(
+    image: np.ndarray,
+    detection_result: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    model, metadata, device = _load_scene_model()
+    if model is None or metadata is None or device is None:
+        return _heuristic_scene(image)
+    return _predict_scene_with_loaded_model(model, metadata, device, image, detection_result=detection_result)
+
+
+def compare_scene_classifiers(
+    image: np.ndarray,
+    detection_result: dict[str, Any] | None = None,
+) -> dict[str, dict[str, Any]]:
+    configs = [
+        ("visual_only_baseline", BASELINE_SCENE_CHECKPOINT),
+        ("text_cross_attention", VANILLA_TEXT_SCENE_CHECKPOINT),
+        ("text_cross_attention_infonce", INFONCE_SCENE_CHECKPOINT),
+    ]
+    results: dict[str, dict[str, Any]] = {}
+    for key, checkpoint_path in configs:
+        model, metadata, device = _load_scene_model(checkpoint_path)
+        if model is None or metadata is None or device is None:
+            fallback = _heuristic_scene(image)
+            fallback.update(
+                {
+                    "confidence": None,
+                    "top3": [],
+                    "source": "heuristic-fallback",
+                    "backbone": None,
+                    "fusion_mode": None,
+                    "checkpoint": str(checkpoint_path),
+                }
+            )
+            results[key] = fallback
+            continue
+
+        metadata = dict(metadata)
+        metadata["checkpoint_path"] = str(checkpoint_path)
+        results[key] = _predict_scene_with_loaded_model(
+            model,
+            metadata,
+            device,
+            image,
+            detection_result=detection_result,
+        )
+    return results

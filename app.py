@@ -22,7 +22,7 @@ from src.analyzer.quality import generate_feedback, summarize_scores
 from src.analyzer.tilt_correction import analyze_tilt_and_horizon
 from src.enhancer.traditional_enhance import enhance_image
 from src.models.object_detector import detect_objects
-from src.models.scene_classifier import classify_scene
+from src.models.scene_classifier import classify_scene, compare_scene_classifiers
 from src.models.segmenter import segment_regions
 from src.utils.visualization import build_metrics_markdown
 
@@ -98,6 +98,36 @@ def _apply_auto_straighten(image: np.ndarray) -> tuple[np.ndarray, dict]:
     return image, tilt_result
 
 
+def _build_scene_comparison_markdown(results: dict[str, dict]) -> str:
+    model_titles = {
+        "visual_only_baseline": "Visual-Only Baseline",
+        "text_cross_attention": "Text Cross-Attention",
+        "text_cross_attention_infonce": "Text Cross-Attention + InfoNCE",
+    }
+    rows = [
+        "| Model | Predicted Scene | Confidence | Top-3 | Source |",
+        "|---|---|---:|---|---|",
+    ]
+    for key in ["visual_only_baseline", "text_cross_attention", "text_cross_attention_infonce"]:
+        result = results.get(key, {})
+        label = result.get("label", "unknown")
+        confidence = result.get("confidence")
+        confidence_text = f"{confidence:.4f}" if isinstance(confidence, (int, float)) else "-"
+        top3 = result.get("top3", []) or []
+        top3_text = ", ".join(f"{item['label']}={item['confidence']:.3f}" for item in top3) if top3 else "-"
+        source = result.get("source", "unknown")
+        rows.append(f"| {model_titles[key]} | `{label}` | {confidence_text} | {top3_text} | `{source}` |")
+
+    summary_lines = [
+        "## Scene Classifier Comparison",
+        "",
+        "동일한 입력 이미지에 대해 `baseline`, `vanilla text cross-attention`, `InfoNCE` 세 모델의 scene prediction을 나란히 비교한 결과이다.",
+        "",
+        *rows,
+    ]
+    return "\n".join(summary_lines)
+
+
 def process_image(
     image: np.ndarray,
     enable_text_processing: bool,
@@ -117,6 +147,7 @@ def process_image(
     edge_density = calculate_edge_density(analysis_image)
     detection_result = detect_objects(analysis_image)
     scene_result = classify_scene(analysis_image, detection_result=detection_result)
+    scene_comparison_result = compare_scene_classifiers(analysis_image, detection_result=detection_result)
     segmentation_result = segment_regions(analysis_image, detection_result=detection_result)
     crop_result = suggest_crop(analysis_image, detection_result, segmentation_result=segmentation_result)
     manual_points = manual_points or []
@@ -171,9 +202,11 @@ def process_image(
     feedback = generate_feedback(metrics)
     histogram_fig = build_histogram_figure(analysis_image, final_output)
     metrics_md = build_metrics_markdown(metrics, feedback)
+    scene_comparison_md = _build_scene_comparison_markdown(scene_comparison_result)
 
     return (
         metrics_md,
+        scene_comparison_md,
         histogram_fig,
         tilt_result["visualization_image"],
         detection_result["annotated_image"],
@@ -237,6 +270,8 @@ with gr.Blocks(title="VisionCraft") as demo:
 
     with gr.Row():
         metrics_output = gr.Markdown(label="Analysis Report")
+        scene_comparison_output = gr.Markdown(label="Scene Model Comparison")
+    with gr.Row():
         histogram_output = gr.Plot(label="Original vs Enhanced RGB Histogram")
     with gr.Row():
         ocr_text_output = gr.Textbox(label="Detected Text", lines=8)
@@ -247,6 +282,7 @@ with gr.Blocks(title="VisionCraft") as demo:
         inputs=[input_image, enable_text_processing, manual_points_state, manual_rectified_image],
         outputs=[
             metrics_output,
+            scene_comparison_output,
             histogram_output,
             tilt_visualization_image,
             detection_image,

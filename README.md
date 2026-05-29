@@ -812,6 +812,8 @@ VisionCraft의 내부 파이프라인은 다수의 모듈로 구성되어 있지
 
 4. 우측의 `Enhanced Image`와 하단의 세부 탭을 통해 intermediate result와 최종 결과를 확인한다.
 
+5. 하단의 `Scene Model Comparison` 패널에서 `visual-only baseline`, `vanilla text cross-attention`, `text cross-attention + InfoNCE` 세 모델의 예측 결과를 나란히 비교할 수 있다.
+
 주요 탭은 다음과 같다.
 
 - `Auto Straighten`: 기울기 추정과 straighten preview 확인
@@ -828,6 +830,7 @@ VisionCraft의 내부 파이프라인은 다수의 모듈로 구성되어 있지
 실사용 시 주의할 점은 다음과 같다.
 
 - `Difference Heatmap`과 `ORB Matching`은 이미지를 업로드한 직후에는 비어 있을 수 있으며, 반드시 `Analyze and Enhance`를 실행해야 결과가 생성된다.
+- `Scene Model Comparison`은 동일한 입력 이미지에 대해 세 종류의 scene classifier 결과를 한 번에 보여주며, 각 모델의 predicted label, confidence, top-3 후보를 비교할 수 있다.
 - 전체화면이 아니면 화면 너비에 따라 일부 탭이 접혀 보일 수 있으므로, 전체화면 사용을 권장한다.
 - OCR 결과를 확인하려면 `Enable Text Processing (OCR)`를 켜고, `Manual 4-Point Rectification` 탭에서 4개 점을 지정한 뒤 다시 `Analyze and Enhance`를 실행해야 한다.
 - OpenAI API key가 등록되어 있으면 OpenAI multimodal OCR 경로를 사용할 수 있고, 그렇지 않으면 PaddleOCR, EasyOCR, Tesseract 순으로 fallback이 시도된다.
@@ -1160,21 +1163,13 @@ $$
 로 정의한다. 여기서 $\tau$는 temperature이다. 정답 label이 $y$일 때 contrastive objective는
 
 $$
-\mathcal{L}_{con}
-=
--\log
-\frac{\exp(s_y)}
-{\sum_{k}\exp(s_k)}
+\mathcal{L}_{con} = -\log \frac{\exp(s_y)}{\sum_{k}\exp(s_k)}
 $$
 
 이며, 최종 학습 objective는
 
 $$
-\mathcal{L}
-=
-\mathcal{L}_{cls}
-+
-\lambda_{con}\mathcal{L}_{con}
+\mathcal{L} = \mathcal{L}_{cls} + \lambda_{con}\mathcal{L}_{con}
 $$
 
 으로 구성된다.
@@ -1419,6 +1414,18 @@ Triplet confusion-pair UMAP comparison:
 - Baseline: 혼합 구조가 큼
 - Vanilla text: semantic neighbor 내부 재배치
 - InfoNCE: 재배치 위에 class boundary 강화
+
+#### 7.8.1 Scene Confusion Case Gallery
+
+다음 갤러리는 confusion matrix와 pairwise UMAP에서 관찰된 차이를 실제 샘플 수준에서 보여준다. 각 행의 첫 번째 열은 원본 이미지와 정답 class이고, 그 다음 세 열은 동일한 입력에 대해 `baseline`, `vanilla text`, `InfoNCE`가 각각 어떤 label을 예측했는지와 confidence를 함께 보여준다.
+
+![Scene Confusion Case Gallery](logs/scene_confusion_case_gallery.png)
+
+첫 번째 행은 `baseline은 틀렸지만 InfoNCE는 맞춘` 사례를 보여준다. 정답은 `kitchen_dining`인데 baseline은 이를 `restaurant_cafe`로 예측한다. 반면 vanilla text와 InfoNCE는 모두 `kitchen_dining`으로 회복하며, 특히 InfoNCE는 더 높은 confidence를 보인다. 이는 text guidance가 food-related indoor scene pair 안에서 decision boundary를 더 안정화하는 데 실제로 도움이 되었음을 보여준다.
+
+두 번째 행은 `세 모델이 모두 여전히 헷갈리는` 사례다. 정답은 `residential_outdoor`이지만 세 모델 모두 `open_field_landscape`로 예측한다. 이 장면은 야외 잔디와 인물 중심 구성이 강하고, 주거 공간의 구조적 단서가 상대적으로 약해 보인다. 이 행은 text guidance가 representation을 개선하더라도, 입력 이미지 자체에 class-defining cue가 부족하면 ambiguity가 여전히 남을 수 있음을 보여준다.
+
+세 번째 행은 `semantic neighbor 대표 사례`이다. 정답은 `restaurant_cafe`이지만 세 모델 모두 `kitchen_dining`으로 예측한다. 즉 이 경우에는 text guidance와 InfoNCE를 추가해도 semantic neighbor 내부의 경계가 완전히 분리되지는 않았다. 다만 세 모델 모두 높은 confidence로 같은 혼동을 보인다는 점은, 이 샘플이 단순 noisy outlier라기보다 두 클래스가 실제로 매우 가깝게 배치되는 hard case임을 보여준다. 이런 사례는 왜 prototype alignment나 class-aware separation이 필요했는지를 직관적으로 설명하는 데 유용하다.
 
 ### 7.9 Attention Map Interpretation
 
@@ -1830,6 +1837,18 @@ Windows PowerShell:
 ```powershell
 $env:MPLCONFIGDIR="$env:TEMP\\mpl"
 python src/models/build_triplet_latent_visualizations.py
+```
+
+Scene confusion case gallery 생성:
+
+```bash
+python src/models/build_scene_confusion_case_gallery.py
+```
+
+Windows PowerShell:
+
+```powershell
+python src/models/build_scene_confusion_case_gallery.py
 ```
 
 Vanilla attention example을 InfoNCE와 동일한 샘플에 맞춰 다시 생성하려면 다음 명령을 사용할 수 있다.

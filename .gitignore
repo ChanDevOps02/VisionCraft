@@ -19,6 +19,10 @@ input_images/
 checkpoint/
 *.pt
 *.pth
+!checkpoint/
+!checkpoint/scene_classifier_resnet50_v11_visual_only_e20.pt
+!checkpoint/scene_classifier_resnet50_v11_text_crossattn_e20.pt
+!checkpoint/scene_classifier_resnet50_v11_text_crossattn_infonce_A.pt
 
 # Dataset and generated data artifacts
 data/places365/

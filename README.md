@@ -1525,19 +1525,140 @@ VisionCraft/
 
 먼저 Python 가상환경을 만들고 필요한 패키지를 설치한다.
 
+macOS / Linux:
+
 ```bash
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-OCR fallback을 완전히 사용하려면 Python 패키지 외에도 몇 가지 추가 조건이 필요할 수 있다. `pytesseract`를 사용하려면 시스템에 `Tesseract OCR` 바이너리가 별도로 설치되어 있어야 하며, `paddleocr`는 환경에 따라 추가 runtime dependency가 요구될 수 있다. 또한 macOS 환경에서는 시각화 스크립트 실행 시 `MPLCONFIGDIR=/private/tmp/mpl`를 설정하면 Matplotlib cache 관련 문제를 줄이는 데 도움이 된다.
+Windows PowerShell:
+
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+```
+
+`requirements.txt` 설치만으로는 부족하고, 일부 구성 요소는 최초 실행 시 자동 다운로드되거나 별도의 수동 설치가 필요하다.
+
+#### Additional Dependencies and First-Run Downloads
+
+1. `Tesseract OCR` system binary  
+   `pytesseract`는 Python wrapper일 뿐이므로, 실제 OCR 바이너리는 별도로 설치해야 한다.
+
+   - Official repository: [tesseract-ocr/tesseract](https://github.com/tesseract-ocr/tesseract)
+   - Installation guide: [Tesseract User Manual](https://tesseract-ocr.github.io/tessdoc/Installation.html)
+
+   macOS(Homebrew) 예시:
+
+   ```bash
+   brew install tesseract
+   ```
+
+   Windows 예시:
+
+   ```powershell
+   winget install tesseract-ocr.tesseract
+   ```
+
+   또는
+
+   ```powershell
+   choco install tesseract
+   ```
+
+   한국어 OCR까지 사용하려면 `kor` language data가 필요할 수 있다.
+
+2. `YOLOv8n` weights (`yolov8n.pt`)  
+   Object detection은 `ultralytics` 패키지와 함께 `yolov8n.pt` 가중치를 사용한다. 이 파일이 저장소에 이미 포함되어 있다면 추가 작업은 필요 없다. 파일이 없는 환경에서는 인터넷이 연결되어 있으면 첫 실행 시 자동 다운로드될 수 있다. 자동 다운로드에 실패했다면 아래 명령으로 직접 받을 수 있다.
+
+   ```bash
+   .venv/bin/python -c "from ultralytics import YOLO; YOLO('yolov8n.pt')"
+   ```
+
+   Windows PowerShell:
+
+   ```powershell
+   .\.venv\Scripts\python.exe -c "from ultralytics import YOLO; YOLO('yolov8n.pt')"
+   ```
+
+   Ultralytics documentation: [https://docs.ultralytics.com/](https://docs.ultralytics.com/)
+
+3. Hugging Face pretrained models  
+   Semantic segmentation과 CLIP text embedding은 최초 실행 시 Hugging Face Hub에서 pretrained model을 자동 다운로드한다.
+
+   - SegFormer: [`nvidia/segformer-b0-finetuned-ade-512-512`](https://huggingface.co/nvidia/segformer-b0-finetuned-ade-512-512)
+   - CLIP text model: [`openai/clip-vit-base-patch32`](https://huggingface.co/openai/clip-vit-base-patch32)
+
+   인터넷이 연결된 환경이라면 대부분 자동으로 받아진다. 자동 다운로드에 실패했거나 오프라인 환경이라면 아래 명령으로 미리 캐시를 생성해 둘 수 있다.
+
+   SegFormer 캐시 예시:
+
+   ```bash
+   python -c "from transformers import AutoImageProcessor, AutoModelForSemanticSegmentation; AutoImageProcessor.from_pretrained('nvidia/segformer-b0-finetuned-ade-512-512'); AutoModelForSemanticSegmentation.from_pretrained('nvidia/segformer-b0-finetuned-ade-512-512')"
+   ```
+
+   CLIP 캐시 예시:
+
+   ```bash
+   python -c "from transformers import CLIPModel, CLIPTokenizer; CLIPTokenizer.from_pretrained('openai/clip-vit-base-patch32'); CLIPModel.from_pretrained('openai/clip-vit-base-patch32')"
+   ```
+
+   Windows PowerShell에서는 같은 명령을 그대로 `python -c "..."` 형태로 실행하면 된다.
+
+4. VisionCraft scene-classifier checkpoint  
+   앱의 기본 scene classifier는 다음 체크포인트를 기대한다.
+
+   ```text
+   checkpoint/scene_classifier_resnet50_v11_text_crossattn_e20.pt
+   ```
+
+   이 파일이 없으면 앱은 `_heuristic_scene` fallback으로 동작하며, 학습된 ResNet50 + text cross-attention 추론 대신 coarse heuristic scene label만 반환한다.  
+   따라서 제출용 zip이나 별도 백업본에서 `checkpoint/` 폴더를 함께 준비하는 것이 가장 안전하다.
+
+5. Training / evaluation dataset  
+   연구 파이프라인의 학습과 평가는 기본적으로 아래 데이터셋 경로를 사용한다.
+
+   ```text
+   data/visioncraft_subset_small_v11/
+   ```
+
+   이 subset이 없다면 그대로는 재현되지 않는다. 필요한 경우 다음 두 경로를 참고해 직접 데이터를 준비할 수 있다.
+
+   - Places365 official page: [https://places2.csail.mit.edu/](https://places2.csail.mit.edu/)
+   - Places365 download page: [https://places2.csail.mit.edu/download.html](https://places2.csail.mit.edu/download.html)
+
+   저장소에는 Places365 label을 VisionCraft class로 재매핑하는 스크립트도 포함되어 있다.
+
+   ```bash
+   python src/models/build_visioncraft_subset.py --help
+   ```
+
+6. Scene text embedding cache  
+   Text-guided 실험을 재현하려면 CLIP 기반 scene text embedding cache가 필요하다. 이 파일은 앱의 기본 실행에는 필수는 아니지만, 학습/평가 재현에는 필요하다. 파일이 없다면 아래 명령으로 생성할 수 있다.
+
+   ```bash
+   python src/models/precompute_scene_text_embeddings.py \
+     --output data/scene_text_embeddings_clip_sentence_v1.npz
+   ```
+
+추가로 macOS 환경에서는 시각화 스크립트 실행 시 `MPLCONFIGDIR=/private/tmp/mpl`를 설정하면 Matplotlib cache 관련 문제를 줄이는 데 도움이 된다.
 
 ### 10.2 Run Application
 
 VisionCraft application은 아래 명령으로 실행할 수 있다.
 
+macOS / Linux:
+
 ```bash
+python app.py
+```
+
+Windows PowerShell:
+
+```powershell
 python app.py
 ```
 
@@ -1554,6 +1675,8 @@ OCR 결과를 보려면 `Enable Text Processing (OCR)`를 켜고, `Manual 4-Poin
 ### 10.3 Train Scene Classifier
 
 Visual-only baseline 학습 예시는 다음과 같다.
+
+macOS / Linux / Windows 공통:
 
 ```bash
 python src/models/train_scene_classifier.py \
@@ -1622,6 +1745,12 @@ python src/models/train_scene_classifier.py \
 nohup python -u src/models/train_scene_classifier.py ... > logs/train.log 2>&1 &
 ```
 
+Windows에서는 `nohup` 대신 PowerShell의 `Start-Process`를 사용할 수 있다.
+
+```powershell
+Start-Process python -ArgumentList "src/models/train_scene_classifier.py", "--data-root", "data/visioncraft_subset_small_v11", "..." -NoNewWindow
+```
+
 ### 10.4 Evaluate Scene Classifier
 
 학습된 체크포인트의 confusion matrix와 classification report는 다음 명령으로 생성할 수 있다.
@@ -1659,10 +1788,33 @@ python src/models/analyze_latent_comparison.py \
   --cache-only
 ```
 
+Windows PowerShell에서는 `MPLCONFIGDIR`를 아래처럼 설정할 수 있다.
+
+```powershell
+$env:MPLCONFIGDIR="$env:TEMP\\mpl"
+python src/models/analyze_latent_comparison.py `
+  --data-root data/visioncraft_subset_small_v11 `
+  --baseline-checkpoint checkpoint/scene_classifier_resnet50_v11_visual_only_e20.pt `
+  --text-checkpoint checkpoint/scene_classifier_resnet50_v11_text_crossattn_e20.pt `
+  --split val `
+  --samples-per-class 180 `
+  --seed 42 `
+  --num-workers 0 `
+  --output-dir logs/latent_comparison_v11_full180 `
+  --cache-only
+```
+
 InfoNCE rerun cache 생성:
 
 ```bash
 MPLCONFIGDIR=/private/tmp/mpl \
+python src/models/build_infonce_rerun_latent_cache.py
+```
+
+Windows PowerShell:
+
+```powershell
+$env:MPLCONFIGDIR="$env:TEMP\\mpl"
 python src/models/build_infonce_rerun_latent_cache.py
 ```
 
@@ -1673,10 +1825,24 @@ MPLCONFIGDIR=/private/tmp/mpl \
 python src/models/build_triplet_latent_visualizations.py
 ```
 
+Windows PowerShell:
+
+```powershell
+$env:MPLCONFIGDIR="$env:TEMP\\mpl"
+python src/models/build_triplet_latent_visualizations.py
+```
+
 Vanilla attention example을 InfoNCE와 동일한 샘플에 맞춰 다시 생성하려면 다음 명령을 사용할 수 있다.
 
 ```bash
 MPLCONFIGDIR=/private/tmp/mpl \
+python src/models/plot_vanilla_attention_examples_matched_to_infonce.py
+```
+
+Windows PowerShell:
+
+```powershell
+$env:MPLCONFIGDIR="$env:TEMP\\mpl"
 python src/models/plot_vanilla_attention_examples_matched_to_infonce.py
 ```
 

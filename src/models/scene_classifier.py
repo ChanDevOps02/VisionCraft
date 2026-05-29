@@ -12,7 +12,7 @@ from src.models.object_features import build_object_feature_vector
 from src.models.train_scene_classifier import build_model, build_transforms, get_device
 
 
-DEFAULT_SCENE_CHECKPOINT = Path("checkpoint/scene_classifier_resnet50_v11_text_crossattn_e20.pt")
+DEFAULT_SCENE_CHECKPOINT = Path("checkpoint/scene_classifier_resnet50_v11_text_crossattn_infonce_A.pt")
 
 _SCENE_MODEL = None
 _SCENE_METADATA: dict[str, Any] | None = None

@@ -527,7 +527,7 @@ $$
 
 #### 4.2.1 Scene Classification
 
-Scene Classification은 입력 이미지의 high-level semantic identity를 추정하는 단계이다. 현재 앱에서는 [scene_classifier.py](src/models/scene_classifier.py) 가 기본 추론 진입점이며, 기본 체크포인트는 `scene_classifier_resnet50_v11_text_crossattn_e20.pt` 이다.
+Scene Classification은 입력 이미지의 high-level semantic identity를 추정하는 단계이다. 현재 앱에서는 [scene_classifier.py](src/models/scene_classifier.py) 가 기본 추론 진입점이며, 기본 체크포인트는 `scene_classifier_resnet50_v11_text_crossattn_infonce_A.pt` 이다.
 
 추론 시 이미지는 학습 시 사용한 transform을 거쳐 backbone으로 입력되며, 최종 logits $\mathbf{z}$에 대해 softmax를 적용하여 클래스 확률을 계산한다.
 
@@ -1612,10 +1612,10 @@ pip install -r requirements.txt
    앱의 기본 scene classifier는 다음 체크포인트를 기대한다.
 
    ```text
-   checkpoint/scene_classifier_resnet50_v11_text_crossattn_e20.pt
+   checkpoint/scene_classifier_resnet50_v11_text_crossattn_infonce_A.pt
    ```
 
-   이 파일이 없으면 앱은 `_heuristic_scene` fallback으로 동작하며, 학습된 ResNet50 + text cross-attention 추론 대신 coarse heuristic scene label만 반환한다.  
+   이 파일이 없으면 앱은 `_heuristic_scene` fallback으로 동작하며, 학습된 ResNet50 + text cross-attention + InfoNCE 추론 대신 coarse heuristic scene label만 반환한다.  
    따라서 제출용 zip이나 별도 백업본에서 `checkpoint/` 폴더를 함께 준비하는 것이 가장 안전하다.
 
 5. Training / evaluation dataset  

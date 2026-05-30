@@ -1556,9 +1556,19 @@ Windows PowerShell:
 
 ```powershell
 python -m venv .venv
-.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m pip install --upgrade pip
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
+
+Windows에서는 프로젝트 폴더의 `setup_windows.bat`을 더블클릭해도 위 과정을 자동으로 실행할 수 있다. 이 파일은 Python 3.11을 찾고, `.venv`를 만든 뒤 `requirements.txt`를 설치한다. 설치가 끝나면 `run_visioncraft.bat`으로 앱을 실행한다.
+
+Windows에서 `python --version`이 버전 번호 없이 `Python`만 출력되거나 Microsoft Store가 열리면 실제 Python이 아니라 Windows App Execution Alias가 잡힌 상태일 수 있다. 이 경우 Python 3.11을 설치한 뒤 새 PowerShell을 열어 다시 시도한다.
+
+```powershell
+winget install --id Python.Python.3.11 -e --scope user --accept-package-agreements --accept-source-agreements
+```
+
+PowerShell 실행 정책 때문에 `Activate.ps1`이 막히는 환경도 있으므로, Windows에서는 위 예시처럼 가상환경의 Python 실행 파일을 직접 호출하는 방식을 권장한다.
 
 `requirements.txt` 설치만으로는 부족하고, 일부 구성 요소는 최초 실행 시 자동 다운로드되거나 별도의 수동 설치가 필요하다.
 
@@ -1663,7 +1673,7 @@ pip install -r requirements.txt
      --output-path data/scene_text_embeddings_clip_sentence_v1.npz
    ```
 
-추가로 macOS 환경에서는 시각화 스크립트 실행 시 `MPLCONFIGDIR=/private/tmp/mpl`를 설정하면 Matplotlib cache 관련 문제를 줄이는 데 도움이 된다.
+추가로 macOS 환경에서는 시각화 스크립트 실행 시 `MPLCONFIGDIR=/private/tmp/mpl`를 설정하면 Matplotlib cache 관련 문제를 줄이는 데 도움이 된다. Windows에서는 프로젝트 폴더 안의 `.mplconfig`를 사용하도록 설정하면 권한 문제를 피할 수 있다.
 
 ### 10.2 Run Application
 
@@ -1678,10 +1688,21 @@ python app.py
 Windows PowerShell:
 
 ```powershell
-python app.py
+$env:MPLCONFIGDIR = "$PWD\.mplconfig"
+.\.venv\Scripts\python.exe app.py
 ```
 
-실행 후 로컬 Gradio 주소를 브라우저에서 열면 된다. 애플리케이션 안에서는 다음 흐름을 확인할 수 있다.
+Windows 사용자는 의존성 설치가 끝난 뒤 프로젝트 폴더의 `run_visioncraft.bat`을 더블클릭해도 된다. 이 파일은 `.venv\Scripts\python.exe`로 앱을 실행하고 `MPLCONFIGDIR`를 프로젝트 내부 `.mplconfig` 폴더로 지정한다.
+
+실행 후 터미널에 다음과 같은 Gradio 주소가 출력되면 브라우저에서 연다.
+
+```text
+http://127.0.0.1:7860
+```
+
+앱을 실행한 PowerShell 또는 `.bat` 창을 닫으면 로컬 서버도 종료된다. 브라우저에서 `ERR_CONNECTION_REFUSED`가 나오면 실행 창이 아직 열려 있는지 먼저 확인한다.
+
+애플리케이션 안에서는 다음 흐름을 확인할 수 있다.
 
 - 입력 이미지 업로드
 - low-level quality analysis

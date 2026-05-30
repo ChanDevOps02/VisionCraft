@@ -547,10 +547,10 @@ $$
 
 - 장면의 high-level identity 추정
 - quality summary와 feedback에 semantic context 제공
-- 일부 보정 단계에서 보조 신호 제공
+- scene-aware enhancement policy 선택에 직접 사용
 - 연구 파이프라인의 attention 및 latent 해석을 위한 semantic anchor 제공
 
-다만 crop recommendation이나 모든 enhancement rule이 scene label에 직접 의존하는 것은 아니다. 실제로는 detection, segmentation, low-level quality score가 더 직접적인 후속 입력으로 사용되며, scene label은 이를 보완하는 context cue에 가깝다.
+다만 crop recommendation이나 모든 후속 rule이 scene label에만 의존하는 것은 아니다. 실제로는 detection, segmentation, low-level quality score가 함께 사용되며, scene label은 `indoor-natural`, `landscape-natural`, `urban-balanced`와 같은 보정 policy를 선택하는 high-level context로 작동한다. 따라서 VisionCraft의 application pipeline은 scene identity를 단순 리포트 항목으로만 사용하지 않고, 최종 enhancement 강도와 원본 보존 비율을 조절하는 데 직접 반영한다.
 
 또한 체크포인트를 불러오지 못하는 경우를 대비해 heuristic fallback도 구현되어 있다. 이 fallback은 HSV와 grayscale 통계에서 blue ratio, green ratio, brightness를 계산해 `nature`, `indoor`, `urban/outdoor` 같은 coarse category를 추정한다. 즉 앱은 learned model이 unavailable해도 완전히 실패하지 않도록 설계되어 있다.
 
@@ -708,7 +708,7 @@ Segmentation fallback의 경우에는 `sky`, `water`, `mountain`, `tree`, `road`
 
 OCR and Perspective Rectification은 [document_text.py](src/analyzer/document_text.py) 에 구현되어 있으며, 문서형 이미지에서 정면 보정과 텍스트 추출을 수행한다.
 
-Perspective rectification은 먼저 문서 영역에 해당하는 사각형 contour를 자동 검출하거나, 사용자가 직접 4개의 꼭짓점을 지정하여 수행된다. 네 점이 주어졌을 때 homography 기반 사영 변환은
+Perspective rectification은 문서 영역에 해당하는 사각형 contour를 자동 검출하는 경로와, 사용자가 직접 4개의 꼭짓점을 지정하는 수동 경로를 모두 코드 수준에서 포함한다. 다만 현재 Gradio application의 OCR workflow에서는 사용자가 `Manual 4-Point Rectification` 탭에서 네 꼭짓점을 지정한 뒤, 그 rectified image를 OCR 입력으로 사용하는 방식을 기본으로 한다. 네 점이 주어졌을 때 homography 기반 사영 변환은
 
 $$
 \mathbf{x}' \sim H\mathbf{x}
@@ -725,7 +725,9 @@ OCR 자체는 하나의 엔진에 고정되지 않는다. 우선순위는 다음
 3. EasyOCR
 4. Tesseract
 
-또한 OCR 정확도를 높이기 위해 grayscale, denoised, adaptive threshold, Otsu threshold, upscaled image 등 여러 전처리 variant를 생성하고, 가장 안정적인 결과를 선택한다. 즉 VisionCraft의 OCR 모듈은 단순 텍스트 추출보다는 `rectification + preprocessing + multi-engine fallback`을 결합한 robust document reading pipeline에 가깝다.
+단, `OPENAI_API_KEY`가 설정되어 있는 경우에는 OpenAI multimodal 경로를 우선 사용하며, 이 경로가 실패하면 실패 사유를 사용자에게 명시적으로 반환한다. 이는 OpenAI OCR을 사용하도록 설정한 상황에서 조용히 약한 local OCR 결과로 degrade되는 것을 피하기 위한 설계이다. `OPENAI_API_KEY`가 없을 때는 PaddleOCR, EasyOCR, Tesseract 순으로 local OCR fallback이 시도된다.
+
+또한 OCR 정확도를 높이기 위해 grayscale, denoised, adaptive threshold, Otsu threshold, upscaled image 등 여러 전처리 variant를 생성하고, 가장 안정적인 결과를 선택한다. 즉 VisionCraft의 OCR 모듈은 단순 텍스트 추출보다는 `manual rectification + preprocessing + optional multimodal OCR/local fallback`을 결합한 robust document reading pipeline에 가깝다.
 
 ---
 
@@ -742,6 +744,17 @@ Traditional Enhancement는 [traditional_enhance.py](src/enhancer/traditional_enh
 5. Adaptive Sharpening
 6. Adaptive Denoising
 7. Region-aware Adjustment
+
+최근 구현에서는 이 기본 파이프라인 위에 scene classifier 결과를 반영하는 `scene-aware enhancement policy`를 추가하였다. 즉 모든 장면에 동일한 보정 강도를 적용하지 않고, `scene`, `main_subject`, `ocr_status`, segmentation mask를 함께 사용하여 각 연산의 강도와 원본 blending 비율을 조절한다. 이는 장면별로 서로 다른 시각적 품질 요구를 반영하면서도, 과도한 색 변화나 HDR-like artifact를 줄이기 위한 보수적 설계이다.
+
+현재 적용되는 주요 policy는 다음과 같다.
+
+- `indoor-natural`: bedroom, restaurant_cafe, kitchen_dining, office_study 장면에 적용된다. 실내 조명과 따뜻한 색감을 보존하기 위해 white balance, CLAHE, sharpening 강도를 낮추고 원본 blending을 증가시킨다.
+- `landscape-natural`: waterfront, mountain_valley, forest_nature, open_field_landscape 장면에 적용된다. 하늘 영역은 원본 색을 강하게 보존하고, 식생 영역은 원본 초록 채도와 색감을 일부 복원하여 보정 후 색이 죽는 현상을 줄인다.
+- `urban-balanced`: street_downtown, transportation_hub_road, residential_outdoor 장면에 적용된다. 도심 이미지의 간판 색, wet street reflection, 건물 명암을 보존하기 위해 brightness/gamma/CLAHE를 약하게 적용하고 최종 원본 blending을 높인다.
+- `structure-preserving`: corridor_lobby, public_large_indoor, industrial_area 장면에 적용된다. 건물, 실내 구조, 직선 edge가 과하게 뭉개지지 않도록 중간 강도의 contrast restoration과 sharpening을 사용한다.
+- `person-safe`: main subject가 person으로 감지될 경우 추가로 적용된다. 인물 영역은 원본과 더 많이 혼합하여 피부톤과 얼굴 texture가 과도하게 바뀌지 않도록 한다.
+- `document-readable`: OCR이 성공하거나 낮은 신뢰도로 텍스트 후보를 찾은 경우 적용된다. 이 경우 자연스러운 사진 색감보다 텍스트 가독성을 우선하여 contrast와 local detail을 조금 더 보존한다.
 
 먼저 white balance는 Gray-World assumption을 이용한다. 채널 평균을 $\mu_R,\mu_G,\mu_B$라 하면, 각 채널 scale은
 
@@ -787,7 +800,7 @@ Denoising 단계는 edge density, blur, brightness에 따라 filter가 바뀐다
 - blur가 매우 크고 저조도이면 median filtering
 - 그 외에는 fast non-local means denoising
 
-마지막으로 segmentation mask가 available하면 person, sky, background에 대해 region-aware adjustment를 수행한다. background는 추가 denoise, sky는 saturation/brightness boost, person은 원본과의 soft blending으로 보정된다. 즉 VisionCraft의 enhancement는 단일 global filter가 아니라, 전역 보정과 영역별 보정을 순차적으로 결합한 hybrid pipeline이다.
+마지막으로 segmentation mask가 available하면 person, sky, background에 대해 region-aware adjustment를 수행한다. background는 추가 denoise, sky는 원본 색 보존 중심의 soft blending, person은 원본과의 soft blending으로 보정된다. 특히 landscape 계열에서는 HSV 기반 greenery mask를 추가로 계산하여 수풀과 잔디의 채도가 지나치게 낮아지는 문제를 완화한다. 즉 VisionCraft의 enhancement는 단일 global filter가 아니라, 전역 보정과 장면별 policy, 영역별 보정을 순차적으로 결합한 hybrid pipeline이다.
 
 ---
 
@@ -812,7 +825,9 @@ VisionCraft의 내부 파이프라인은 다수의 모듈로 구성되어 있지
 
 4. 우측의 `Enhanced Image`와 하단의 세부 탭을 통해 intermediate result와 최종 결과를 확인한다.
 
-5. 하단의 `Scene Model Comparison` 패널에서 `visual-only baseline`, `vanilla text cross-attention`, `text cross-attention + InfoNCE` 세 모델의 예측 결과를 나란히 비교할 수 있다.
+5. 상단의 `Model Status` 패널에서 YOLO, Scene Classifier, SegFormer, OCR backend가 정상 실행되었는지 또는 fallback/disabled 상태인지 확인한다.
+
+6. 하단의 `Scene Model Comparison` 패널에서 `visual-only baseline`, `vanilla text cross-attention`, `text cross-attention + InfoNCE` 세 모델의 예측 결과를 나란히 비교할 수 있다.
 
 주요 탭은 다음과 같다.
 
@@ -830,10 +845,12 @@ VisionCraft의 내부 파이프라인은 다수의 모듈로 구성되어 있지
 실사용 시 주의할 점은 다음과 같다.
 
 - `Difference Heatmap`과 `ORB Matching`은 이미지를 업로드한 직후에는 비어 있을 수 있으며, 반드시 `Analyze and Enhance`를 실행해야 결과가 생성된다.
+- `Model Status` 패널은 YOLO object detection, scene classifier checkpoint, SegFormer segmentation, OCR backend의 실행 상태를 요약한다. 따라서 특정 결과가 비어 있거나 fallback으로 생성된 경우, 사용자는 해당 패널에서 원인을 먼저 확인할 수 있다.
 - `Scene Model Comparison`은 동일한 입력 이미지에 대해 세 종류의 scene classifier 결과를 한 번에 보여주며, 각 모델의 predicted label, confidence, top-3 후보를 비교할 수 있다.
+- 최종 enhancement는 scene classifier의 predicted label에 따라 서로 다른 보정 policy를 사용한다. 예를 들어 `open_field_landscape`는 하늘과 식생 색 보존을 우선하고, `street_downtown`은 간판 색과 도시 명암을 보존하는 방향으로 보정 강도를 낮춘다.
 - 전체화면이 아니면 화면 너비에 따라 일부 탭이 접혀 보일 수 있으므로, 전체화면 사용을 권장한다.
 - OCR 결과를 확인하려면 `Enable Text Processing (OCR)`를 켜고, `Manual 4-Point Rectification` 탭에서 4개 점을 지정한 뒤 다시 `Analyze and Enhance`를 실행해야 한다.
-- OpenAI API key가 등록되어 있으면 OpenAI multimodal OCR 경로를 사용할 수 있고, 그렇지 않으면 PaddleOCR, EasyOCR, Tesseract 순으로 fallback이 시도된다.
+- OpenAI API key가 등록되어 있으면 OpenAI multimodal OCR 경로를 우선 사용한다. 이 경로가 실패하면 실패 사유를 표시하며, OpenAI key가 없는 환경에서는 PaddleOCR, EasyOCR, Tesseract 순으로 local fallback이 시도된다.
 
 ### 5.3 Main UI Examples
 
@@ -1481,7 +1498,7 @@ Application 관점에서도 이 연구는 별개의 실험에 머무르지 않�
 
 Loss 설계도 더 확장할 수 있다. 이번 InfoNCE는 prototype-aware alignment에 분명한 효과를 보였지만, 앞으로는 hard confusion pair 중심의 contrastive objective, class-conditional margin loss, 혹은 hierarchical semantic regularization을 결합하는 방향도 고려할 수 있다. 이는 단순히 정답 prototype과의 정렬만이 아니라, "어떤 클래스들과는 가까워도 되고 어떤 클래스들과는 반드시 분리되어야 하는가"를 더 명시적으로 반영하는 방식이 될 수 있다.
 
-마지막으로 application pipeline과 research pipeline의 연결을 더 강하게 만드는 것도 중요한 과제다. 현재는 scene classification 결과가 analysis summary와 일부 enhancement heuristic에 보조적으로 활용되지만, 장기적으로는 scene representation 자체가 crop recommendation, region weighting, enhancement policy selection에 더 직접적으로 반영되는 구조를 설계할 수 있다. 그렇게 된다면 VisionCraft는 단순히 "장면을 이해하는 보정 시스템"을 넘어, 장면 이해와 시각적 개선이 하나의 learned policy 안에서 더 긴밀하게 결합된 framework로 발전할 수 있을 것이다.
+마지막으로 application pipeline과 research pipeline의 연결을 더 강하게 만드는 것도 중요한 과제다. 현재는 scene classification 결과가 rule-based scene-aware enhancement policy 선택에 직접 사용되지만, policy 자체는 아직 hand-crafted heuristic에 가깝다. 장기적으로는 scene representation, segmentation region, quality score를 함께 입력으로 사용하는 learned enhancement policy를 설계할 수 있다. 그렇게 된다면 VisionCraft는 단순히 "장면을 이해하는 보정 시스템"을 넘어, 장면 이해와 시각적 개선이 하나의 learned policy 안에서 더 긴밀하게 결합된 framework로 발전할 수 있을 것이다.
 
 ---
 
@@ -1643,7 +1660,7 @@ pip install -r requirements.txt
 
    ```bash
    python src/models/precompute_scene_text_embeddings.py \
-     --output data/scene_text_embeddings_clip_sentence_v1.npz
+     --output-path data/scene_text_embeddings_clip_sentence_v1.npz
    ```
 
 추가로 macOS 환경에서는 시각화 스크립트 실행 시 `MPLCONFIGDIR=/private/tmp/mpl`를 설정하면 Matplotlib cache 관련 문제를 줄이는 데 도움이 된다.
@@ -1864,7 +1881,7 @@ Scene text embedding cache가 아직 없다면 먼저 다음 명령을 실행해
 
 ```bash
 python src/models/precompute_scene_text_embeddings.py \
-  --output data/scene_text_embeddings_clip_sentence_v1.npz
+  --output-path data/scene_text_embeddings_clip_sentence_v1.npz
 ```
 
 ---

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import html
+
 import gradio as gr
 import numpy as np
 
@@ -128,6 +130,65 @@ def _build_scene_comparison_markdown(results: dict[str, dict]) -> str:
     return "\n".join(summary_lines)
 
 
+def _format_status_badge(status: str) -> str:
+    normalized = (status or "unknown").lower()
+    color = "#388e3c"
+    if normalized in {"fallback", "heuristic-fallback", "manual_required", "disabled", "unavailable"}:
+        color = "#f57c00"
+    elif normalized in {"failed", "error"}:
+        color = "#d32f2f"
+    return f"<code style='color:{color};font-weight:700;'>{html.escape(str(status))}</code>"
+
+
+def _build_model_status_markdown(
+    detection_result: dict,
+    segmentation_result: dict,
+    scene_result: dict,
+    scene_comparison_result: dict[str, dict],
+    ocr_result: dict,
+) -> str:
+    comparison_sources = [
+        result.get("source", "unknown")
+        for result in scene_comparison_result.values()
+    ]
+    learned_count = sum(source == "learned-checkpoint" for source in comparison_sources)
+    comparison_status = f"{learned_count}/{len(comparison_sources)} checkpoints loaded"
+
+    rows = [
+        ("YOLO Object Detection", detection_result.get("status", "unknown"), detection_result.get("summary", "")),
+        (
+            "Scene Classifier",
+            scene_result.get("source", "heuristic-fallback"),
+            scene_result.get("reason", ""),
+        ),
+        ("Scene Model Comparison", comparison_status, ", ".join(comparison_sources) or "unknown"),
+        (
+            "SegFormer Segmentation",
+            segmentation_result.get("status", "unknown"),
+            f"{segmentation_result.get('source', 'unknown')} | {segmentation_result.get('summary', '')}",
+        ),
+        (
+            "OCR Backend",
+            ocr_result.get("status", "unknown"),
+            f"{ocr_result.get('engine', 'unknown')} | {ocr_result.get('summary', '')}",
+        ),
+    ]
+
+    body = "".join(
+        "<tr>"
+        f"<th style='text-align:left;padding:6px 10px;border-bottom:1px solid #333;width:26%;'>{html.escape(name)}</th>"
+        f"<td style='padding:6px 10px;border-bottom:1px solid #333;width:20%;'>{_format_status_badge(status)}</td>"
+        f"<td style='padding:6px 10px;border-bottom:1px solid #333;'>{html.escape(str(detail or '-'))}</td>"
+        "</tr>"
+        for name, status, detail in rows
+    )
+    return (
+        "<h2 style='margin:0 0 8px 0;'>Model Status</h2>"
+        "<table style='width:100%;border-collapse:collapse;margin:6px 0 14px 0;font-size:14px;'>"
+        f"{body}</table>"
+    )
+
+
 def process_image(
     image: np.ndarray,
     enable_text_processing: bool,
@@ -202,9 +263,17 @@ def process_image(
     feedback = generate_feedback(metrics)
     histogram_fig = build_histogram_figure(analysis_image, final_output)
     metrics_md = build_metrics_markdown(metrics, feedback)
+    model_status_md = _build_model_status_markdown(
+        detection_result,
+        segmentation_result,
+        scene_result,
+        scene_comparison_result,
+        ocr_result,
+    )
     scene_comparison_md = _build_scene_comparison_markdown(scene_comparison_result)
 
     return (
+        model_status_md,
         metrics_md,
         scene_comparison_md,
         histogram_fig,
@@ -267,6 +336,10 @@ with gr.Blocks(title="VisionCraft") as demo:
         value=False,
         info="체크한 경우에만 OCR과 한국어 해석을 수행합니다.",
     )
+    model_status_output = gr.Markdown(
+        "## Model Status\n분석을 실행하면 YOLO, Scene Classifier, SegFormer, OCR backend 상태가 여기에 표시됩니다.",
+        label="Model Status",
+    )
 
     with gr.Row():
         metrics_output = gr.Markdown(label="Analysis Report")
@@ -281,6 +354,7 @@ with gr.Blocks(title="VisionCraft") as demo:
         fn=process_image,
         inputs=[input_image, enable_text_processing, manual_points_state, manual_rectified_image],
         outputs=[
+            model_status_output,
             metrics_output,
             scene_comparison_output,
             histogram_output,

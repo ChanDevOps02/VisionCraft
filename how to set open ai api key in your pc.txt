@@ -1,0 +1,111 @@
+How to set OpenAI API key on your PC
+====================================
+
+This project reads the OpenAI API key from an environment variable named:
+
+OPENAI_API_KEY
+
+Do not paste your API key into the source code, README, GitHub, screenshots,
+or public chat messages. Each user should set the key only on their own PC.
+
+
+1. Windows PowerShell - temporary setup
+--------------------------------------
+
+Use this if you only want the key to work in the current PowerShell window.
+
+Replace sk-... with your real OpenAI API key:
+
+    $env:OPENAI_API_KEY="sk-..."
+
+Then run the app in the same PowerShell window:
+
+    .\.venv\Scripts\python.exe app.py
+
+You can check whether the key is visible in the current terminal:
+
+    echo $env:OPENAI_API_KEY
+
+
+2. Windows PowerShell - permanent setup
+--------------------------------------
+
+Use this if you want Windows to remember the key for future terminals.
+
+Replace sk-... with your real OpenAI API key:
+
+    setx OPENAI_API_KEY "sk-..."
+
+Important:
+
+- Close the current PowerShell window.
+- Open a new PowerShell window.
+- Then run the app again.
+
+Check the key:
+
+    echo $env:OPENAI_API_KEY
+
+
+3. macOS / Linux - temporary setup
+----------------------------------
+
+Use this if you only want the key to work in the current terminal.
+
+Replace sk-... with your real OpenAI API key:
+
+    export OPENAI_API_KEY="sk-..."
+
+Then run the app in the same terminal:
+
+    python app.py
+
+or, if you are using the local virtual environment:
+
+    .venv/bin/python app.py
+
+Check the key:
+
+    echo $OPENAI_API_KEY
+
+
+4. macOS / Linux - permanent setup
+----------------------------------
+
+Add this line to your shell profile file, such as ~/.zshrc or ~/.bashrc:
+
+    export OPENAI_API_KEY="sk-..."
+
+Then reload the shell profile:
+
+    source ~/.zshrc
+
+or:
+
+    source ~/.bashrc
+
+
+5. How VisionCraft uses the key
+-------------------------------
+
+In VisionCraft, the OpenAI API key is used for the OpenAI vision-based OCR
+and translation path.
+
+If OPENAI_API_KEY is set:
+
+- VisionCraft tries the OpenAI multimodal OCR path first.
+- If that path fails, the app shows the failure reason.
+
+If OPENAI_API_KEY is not set:
+
+- VisionCraft uses local OCR fallback backends such as PaddleOCR, EasyOCR,
+  or Tesseract when available.
+
+
+6. Security reminder
+--------------------
+
+Never commit an API key to GitHub.
+Never write an API key inside app.py, README.md, or any tracked project file.
+If a key is accidentally exposed, revoke it immediately from the OpenAI dashboard
+and create a new one.
